@@ -11,7 +11,7 @@ namespace ChatApiTest
 {
     class ChatApiTest
     {
-        static void Main(string[] args)
+        public void main(string[] args)
         {
             ChatApiTest test = new ChatApiTest();
             test.testChatApiFrom("hello!!");
@@ -30,7 +30,7 @@ namespace ChatApiTest
             JObject param = RequestUtils.GetSystemParmas();
             param.Add("msg", msg);
 
-            string url = Utils.GetFromConfig("host") + "/api/chat";
+            string url = Utils.GetFromConfig("chat-host") + "/api/chat";
             Console.WriteLine(RequestUtils.HttpPostForm(url, param));
         }
 
@@ -40,7 +40,7 @@ namespace ChatApiTest
             JObject param = RequestUtils.GetSystemParmas();
             param.Add("msg", msg);
 
-            string url = Utils.GetFromConfig("host") + "/api/chat";
+            string url = Utils.GetFromConfig("chat-host") + "/api/chat";
             Console.WriteLine(RequestUtils.HttpPostJson(url, param));
         }
 
@@ -51,7 +51,7 @@ namespace ChatApiTest
             param.Add("geo[lng]", lng);
             param.Add("geo[lat]", lat);
 
-            string url = Utils.GetFromConfig("host") + "/api/chat/geo";
+            string url = Utils.GetFromConfig("chat-host") + "/api/chat/geo";
             Console.WriteLine(RequestUtils.HttpPostForm(url, param));
         }
 
@@ -61,7 +61,7 @@ namespace ChatApiTest
             param.Add("geo[lng]", lng);
             param.Add("geo[lat]", lat);
 
-            string url = Utils.GetFromConfig("host") + "/api/chat/geo";
+            string url = Utils.GetFromConfig("chat-host") + "/api/chat/geo";
             Console.WriteLine(RequestUtils.HttpPostJson(url, param));
         }
 
@@ -81,7 +81,7 @@ namespace ChatApiTest
                     postStr += "&";
                 postStr += item.Key + "=" + item.Value;
             }
-            string url = Utils.GetFromConfig("host") + "/api/speech/chat" + postStr;
+            string url = Utils.GetFromConfig("chat-host") + "/api/speech/chat" + postStr;
             Console.WriteLine(RequestUtils.HttpPostStream(url, file));
         }
 
@@ -100,7 +100,7 @@ namespace ChatApiTest
                     postStr += "&";
                 postStr += item.Key + "=" + item.Value;
             }
-            string url = Utils.GetFromConfig("host") + "/api/speech/chat" + postStr;
+            string url = Utils.GetFromConfig("chat-host") + "/api/speech/chat" + postStr;
             Console.WriteLine(RequestUtils.HttpPostFormData(url, file));
         }
 
