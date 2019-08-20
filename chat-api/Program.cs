@@ -18,8 +18,8 @@ namespace ChatApiTest
             test.testChatApiJson("hello!!");
             test.testApiChatGeoFrom("113.979399", "22.544891");
             test.testApiChatGeoJson("113.979399", "22.544891");
-            test.testApiSpeechChatStream("../../test.amr");
-            test.testApiSpeechChatData("../../test.amr");
+            test.testApiSpeechChatStream("../../chat-api/test.amr");
+            test.testApiSpeechChatData("../../chat-api/test.amr");
             Console.ReadKey();
         }
 

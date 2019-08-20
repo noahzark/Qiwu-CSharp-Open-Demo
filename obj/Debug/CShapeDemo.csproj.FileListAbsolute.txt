@@ -1,0 +1,10 @@
+E:\WorkSpace\GitHub\Qiwu-CSharp-Open-Demo\bin\Debug\ChatApiTest.exe.config
+E:\WorkSpace\GitHub\Qiwu-CSharp-Open-Demo\bin\Debug\ChatApiTest.exe
+E:\WorkSpace\GitHub\Qiwu-CSharp-Open-Demo\bin\Debug\ChatApiTest.pdb
+E:\WorkSpace\GitHub\Qiwu-CSharp-Open-Demo\bin\Debug\Newtonsoft.Json.dll
+E:\WorkSpace\GitHub\Qiwu-CSharp-Open-Demo\bin\Debug\Newtonsoft.Json.xml
+E:\WorkSpace\GitHub\Qiwu-CSharp-Open-Demo\obj\Debug\CShapeDemo.csprojAssemblyReference.cache
+E:\WorkSpace\GitHub\Qiwu-CSharp-Open-Demo\obj\Debug\CShapeDemo.csproj.CoreCompileInputs.cache
+E:\WorkSpace\GitHub\Qiwu-CSharp-Open-Demo\obj\Debug\CShapeDemo.csproj.CopyComplete
+E:\WorkSpace\GitHub\Qiwu-CSharp-Open-Demo\obj\Debug\ChatApiTest.exe
+E:\WorkSpace\GitHub\Qiwu-CSharp-Open-Demo\obj\Debug\ChatApiTest.pdb
