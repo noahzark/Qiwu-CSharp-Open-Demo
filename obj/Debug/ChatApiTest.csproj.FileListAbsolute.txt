@@ -1,0 +1,10 @@
+E:\WorkSpace\C#\ChatApiTest\bin\Debug\ChatApiTest.exe.config
+E:\WorkSpace\C#\ChatApiTest\bin\Debug\ChatApiTest.exe
+E:\WorkSpace\C#\ChatApiTest\bin\Debug\ChatApiTest.pdb
+E:\WorkSpace\C#\ChatApiTest\obj\Debug\ChatApiTest.csprojAssemblyReference.cache
+E:\WorkSpace\C#\ChatApiTest\obj\Debug\ChatApiTest.csproj.CoreCompileInputs.cache
+E:\WorkSpace\C#\ChatApiTest\obj\Debug\ChatApiTest.exe
+E:\WorkSpace\C#\ChatApiTest\obj\Debug\ChatApiTest.pdb
+E:\WorkSpace\C#\ChatApiTest\bin\Debug\Newtonsoft.Json.dll
+E:\WorkSpace\C#\ChatApiTest\bin\Debug\Newtonsoft.Json.xml
+E:\WorkSpace\C#\ChatApiTest\obj\Debug\ChatApiTest.csproj.CopyComplete
