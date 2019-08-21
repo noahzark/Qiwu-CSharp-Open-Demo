@@ -120,7 +120,7 @@ namespace ChatApiTest
             param.Add("nickname", nickname);
             param.Add("uid", uid);
             param.Add("timestamp", timestamp);
-            param.Add("verify", Utils.GetMD5(appsecret + uid + timestamp));
+            param.Add("verify", Utils.GetMD5Cipher(appsecret + uid + timestamp));
             return param;
         }
         public static string HttpPostForm(string url, JObject param)
@@ -281,7 +281,7 @@ namespace ChatApiTest
         }
 
 
-        public static string GetMD5(string str)
+        public static string GetMD5Cipher(string str)
         {
             MD5 md5 = MD5.Create();
             byte[] cipher = md5.ComputeHash(Encoding.UTF8.GetBytes(str));

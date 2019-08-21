@@ -132,7 +132,8 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="account-center\token.cs" />
+    <Compile Include="account-center\AccountTest.cs" />
+    <Compile Include="account-center\TokenTest.cs" />
     <Compile Include="chat-api\ChatApiTest.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
