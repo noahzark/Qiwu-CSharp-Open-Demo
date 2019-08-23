@@ -11,15 +11,15 @@ namespace ChatApiTest
 {
     class ChatApiTest
     {
-        static void Main(string[] args)
+        public void main(string[] args)
         {
             ChatApiTest test = new ChatApiTest();
             test.testChatApiFrom("hello!!");
             test.testChatApiJson("hello!!");
             test.testApiChatGeoFrom("113.979399", "22.544891");
             test.testApiChatGeoJson("113.979399", "22.544891");
-            test.testApiSpeechChatStream("../../test.amr");
-            test.testApiSpeechChatData("../../test.amr");
+            test.testApiSpeechChatStream("../../chat-api/test.amr");
+            test.testApiSpeechChatData("../../chat-api/test.amr");
             Console.ReadKey();
         }
 
@@ -30,7 +30,7 @@ namespace ChatApiTest
             JObject param = RequestUtils.GetSystemParmas();
             param.Add("msg", msg);
 
-            string url = Utils.GetFromConfig("host") + "/api/chat";
+            string url = Utils.GetFromConfig("chat-host") + "/api/chat";
             Console.WriteLine(RequestUtils.HttpPostForm(url, param));
         }
 
@@ -40,7 +40,7 @@ namespace ChatApiTest
             JObject param = RequestUtils.GetSystemParmas();
             param.Add("msg", msg);
 
-            string url = Utils.GetFromConfig("host") + "/api/chat";
+            string url = Utils.GetFromConfig("chat-host") + "/api/chat";
             Console.WriteLine(RequestUtils.HttpPostJson(url, param));
         }
 
@@ -51,7 +51,7 @@ namespace ChatApiTest
             param.Add("geo[lng]", lng);
             param.Add("geo[lat]", lat);
 
-            string url = Utils.GetFromConfig("host") + "/api/chat/geo";
+            string url = Utils.GetFromConfig("chat-host") + "/api/chat/geo";
             Console.WriteLine(RequestUtils.HttpPostForm(url, param));
         }
 
@@ -61,7 +61,7 @@ namespace ChatApiTest
             param.Add("geo[lng]", lng);
             param.Add("geo[lat]", lat);
 
-            string url = Utils.GetFromConfig("host") + "/api/chat/geo";
+            string url = Utils.GetFromConfig("chat-host") + "/api/chat/geo";
             Console.WriteLine(RequestUtils.HttpPostJson(url, param));
         }
 
@@ -81,7 +81,7 @@ namespace ChatApiTest
                     postStr += "&";
                 postStr += item.Key + "=" + item.Value;
             }
-            string url = Utils.GetFromConfig("host") + "/api/speech/chat" + postStr;
+            string url = Utils.GetFromConfig("chat-host") + "/api/speech/chat" + postStr;
             Console.WriteLine(RequestUtils.HttpPostStream(url, file));
         }
 
@@ -100,7 +100,7 @@ namespace ChatApiTest
                     postStr += "&";
                 postStr += item.Key + "=" + item.Value;
             }
-            string url = Utils.GetFromConfig("host") + "/api/speech/chat" + postStr;
+            string url = Utils.GetFromConfig("chat-host") + "/api/speech/chat" + postStr;
             Console.WriteLine(RequestUtils.HttpPostFormData(url, file));
         }
 
@@ -120,7 +120,7 @@ namespace ChatApiTest
             param.Add("nickname", nickname);
             param.Add("uid", uid);
             param.Add("timestamp", timestamp);
-            param.Add("verify", Utils.GetMD5(appsecret + uid + timestamp));
+            param.Add("verify", Utils.GetMD5Cipher(appsecret + uid + timestamp));
             return param;
         }
         public static string HttpPostForm(string url, JObject param)
@@ -281,7 +281,7 @@ namespace ChatApiTest
         }
 
 
-        public static string GetMD5(string str)
+        public static string GetMD5Cipher(string str)
         {
             MD5 md5 = MD5.Create();
             byte[] cipher = md5.ComputeHash(Encoding.UTF8.GetBytes(str));
