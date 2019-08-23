@@ -1,5 +1,4 @@
-﻿using CShapeDemo.account_center;
-using CShapeDemo.account_center.accountTest;
+﻿using CShapeDemo.account_center.accountTest;
 using CShapeDemo.account_center.tokenTest;
 using Newtonsoft.Json.Linq;
 using System;

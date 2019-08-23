@@ -1,19 +1,16 @@
 ﻿using CShapeDemo.account_center;
 using Newtonsoft.Json.Linq;
 using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Net;
 using System.Text;
-using System.Threading.Tasks;
 using System.Web;
 
 namespace ChatApiTest.account_center.walletTest
 {
     class WalletTest
     {
-        static void Main(string[] args)
+        public void main(string[] args)
         {
             WalletTest test = new WalletTest();
             Console.WriteLine(test.testGetBalance());

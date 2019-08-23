@@ -13,8 +13,9 @@ namespace CShapeDemo.account_center.tokenTest
         public void main(string[] args)
         {
             TokenTest test = new TokenTest();
-            //Console.WriteLine(test.testGetToken());
+            Console.WriteLine(test.testGetToken());
             Console.WriteLine(test.testRefreshToken());
+            Console.WriteLine(test.testDeleteToken());
             Console.ReadKey();
         }
 
@@ -36,6 +37,7 @@ namespace CShapeDemo.account_center.tokenTest
             return JObject.Parse(token);
         }
 
+        /* 刷新Token */
         public JObject testRefreshToken()
         {
             JObject tokens = testGetToken();
@@ -52,16 +54,19 @@ namespace CShapeDemo.account_center.tokenTest
             return JObject.Parse(token);
         }
 
-        //需要获取用户Authorization才能
-        //private string testDeleteToken()
-        //{
-        //    JObject tokens = testGetToken();
-        //    if (tokens != null) return null;
-        //    string token = tokens.Value<string>("accessToken");
-        //    JObject param = new JObject();
-        //    param.Add("Refresh-Token", refreshToken);
-        //    param.Add("Timestamp", timestamp);
-        //}
+        /* 注销token */
+        public JObject testDeleteToken()
+        {
+            JObject param = CommonUtils.GetCommonSystem();
+            string url = CommonUtils.GetFromConfig("account-host") + "/api/open/v1/channel/token";
+            string result = RequestUtils.HttpDeleteRequest(url, param);
+            if (result == null)
+            {
+                Console.WriteLine("请求失败！");
+                return null;
+            }
+            return JObject.Parse(result);
+        }
 
     }
 
@@ -106,6 +111,22 @@ namespace CShapeDemo.account_center.tokenTest
             if (result.Value<int>("retcode") == 0)
                 return result.Value<string>("payload");
             else return null;
+        }
+
+        public static string HttpDeleteRequest(string url, JObject param)
+        {
+            HttpWebRequest request = (HttpWebRequest)WebRequest.Create(url);
+            request.Method = "DELETE";
+            foreach (var item in param)
+                request.Headers.Add(item.Key, item.Value.ToString());
+
+            HttpWebResponse response = (HttpWebResponse)request.GetResponse();
+            Stream repStream = response.GetResponseStream();
+            StreamReader myStreamReader = new StreamReader(repStream, Encoding.UTF8);
+            string retString = myStreamReader.ReadToEnd();
+            myStreamReader.Close();
+            repStream.Close();
+            return retString;
         }
 
     }

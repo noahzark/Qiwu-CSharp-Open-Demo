@@ -140,6 +140,7 @@
     <Compile Include="account-center\TokenTest.cs" />
     <Compile Include="account-center\WalletTest.cs" />
     <Compile Include="chat-api\ChatApiTest.cs" />
+    <Compile Include="main.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
