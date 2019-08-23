@@ -124,6 +124,7 @@
     <Reference Include="System.Configuration" />
     <Reference Include="System.Core" />
     <Reference Include="System.Management" />
+    <Reference Include="System.Web" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
@@ -133,7 +134,11 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="account-center\AccountTest.cs" />
+    <Compile Include="account-center\CommonUtils.cs" />
+    <Compile Include="account-center\OrderTest.cs" />
+    <Compile Include="account-center\PaymentTest.cs" />
     <Compile Include="account-center\TokenTest.cs" />
+    <Compile Include="account-center\WalletTest.cs" />
     <Compile Include="chat-api\ChatApiTest.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

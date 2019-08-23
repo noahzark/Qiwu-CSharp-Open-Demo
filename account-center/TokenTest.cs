@@ -1,5 +1,4 @@
-﻿using ChatApiTest.account_center;
-using Newtonsoft.Json.Linq;
+﻿using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -7,22 +6,22 @@ using System.Net;
 using System.Security.Cryptography;
 using System.Text;
 
-namespace CShapeDemo.account_center
+namespace CShapeDemo.account_center.tokenTest
 {
     class TokenTest
     {
         public void main(string[] args)
         {
             TokenTest test = new TokenTest();
-            Console.WriteLine(test.testGetToken());
-            //Console.WriteLine(test.testRefreshToken());
+            //Console.WriteLine(test.testGetToken());
+            Console.WriteLine(test.testRefreshToken());
             Console.ReadKey();
         }
 
-        private JObject testGetToken()
+        public JObject testGetToken()
         {
             string appChannel = CommonUtils.GetFromConfig("appChannel");
-            string timestamp = CommonUtils.GetTimestamp(DateTime.UtcNow);
+            string timestamp = CommonUtils.GetTimestamp();
             JObject param = new JObject();
             param.Add("App-Channel", appChannel);
             param.Add("Timestamp", timestamp);
@@ -30,23 +29,23 @@ namespace CShapeDemo.account_center
             string privateKey = CommonUtils.GetFromConfig("privateKey");
             string sign = Utils.GetSHA1Cipher(sortedParams + privateKey);
             param.Add("Sign", sign);
-            string url = CommonUtils.GetFromConfig("token-host") + "/api/open/v1/channel/token";
+            string url = CommonUtils.GetFromConfig("account-host") + "/api/open/v1/channel/token";
             string token = RequestUtils.HttpGetRequest(url, param);
             if (token == null) return null;
             token = CommonUtils.DecodeAES(token);
             return JObject.Parse(token);
         }
 
-        private JObject testRefreshToken()
+        public JObject testRefreshToken()
         {
             JObject tokens = testGetToken();
             if (tokens == null) return null;
             string refreshToken = tokens.Value<string>("refreshToken");
-            string timestamp = CommonUtils.GetTimestamp(DateTime.UtcNow);
+            string timestamp = CommonUtils.GetTimestamp();
             JObject param = new JObject();
             param.Add("Refresh-Token", refreshToken);
             param.Add("Timestamp", timestamp);
-            string url = CommonUtils.GetFromConfig("token-host") + "/api/open/v1/channel/token";
+            string url = CommonUtils.GetFromConfig("account-host") + "/api/open/v1/channel/token";
             string token = RequestUtils.HttpPostRequest(url, param);
             if (token == null) return null;
             token = CommonUtils.DecodeAES(token);
@@ -113,9 +112,6 @@ namespace CShapeDemo.account_center
 
     class Utils
     {
-
-
-
         public static string GetSortedParamsString(JObject param)
         {
             List<string> list = new List<string>();
