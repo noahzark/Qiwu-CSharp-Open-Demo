@@ -1,30 +1,27 @@
-﻿using CShapeDemo.account_center;
-using Newtonsoft.Json.Linq;
+﻿using Newtonsoft.Json.Linq;
 using System;
-using System.IO;
-using System.Net;
-using System.Text;
 
-namespace ChatApiTest.account_center.paymentTest
+namespace CShapeDemo.account_center.paymentTest
 {
     class PaymentTest
     {
-        public void main(string[] args)
+        private string apiToken;
+        private string userToken;
+
+        public PaymentTest(string apiToken, string userToken)
         {
-            PaymentTest test = new PaymentTest();
-            Console.WriteLine(test.testOrderPay());
-            Console.WriteLine(test.testOrderPayQR());
-            Console.ReadKey();
+            this.apiToken = apiToken;
+            this.userToken = userToken;
         }
 
-        public JObject testOrderPay()
+        /* 订单支付 */
+        public JObject testOrderPay(string orderId, int paymentType)
         {
-            string oid = "f2019073011321849782193";
             JObject param = new JObject();
-            param.Add("orderId", oid);
-            param.Add("paymentType", (int)Utils.PaymentType.ALIPAY);
-            JObject headParam = CommonUtils.GetCommonSystem();
-            string url = CommonUtils.GetFromConfig("account-host") + "/api/open/v1/order/pay";
+            param.Add("orderId", orderId);
+            param.Add("paymentType", paymentType);
+            JObject headParam = CommonUtils.GetCommonSystem(apiToken, userToken);
+            string url = CommonUtils.GetAppConfig("account-host") + "/api/open/v1/order/pay";
             JObject result = RequestUtils.HttpGetRequest(url, headParam, param);
             if (result == null)
             {
@@ -47,14 +44,14 @@ namespace ChatApiTest.account_center.paymentTest
             return result;
         }
 
-        public JObject testOrderPayQR()
+        /* 获取订单二维码 */
+        public JObject testOrderPayQR(string orderId, int paymentType)
         {
-            string oid = "f2019073011321849782193";
             JObject param = new JObject();
-            param.Add("orderId", oid);
-            param.Add("paymentType", (int)Utils.PaymentType.ALIPAY);
-            JObject headParam = CommonUtils.GetCommonSystem();
-            string url = CommonUtils.GetFromConfig("account-host") + "/api/open/v1/order/pay/qr";
+            param.Add("orderId", orderId);
+            param.Add("paymentType", paymentType);
+            JObject headParam = CommonUtils.GetCommonSystem(apiToken, userToken);
+            string url = CommonUtils.GetAppConfig("account-host") + "/api/open/v1/order/pay/qr";
             JObject result = RequestUtils.HttpGetRequest(url, headParam, param);
             if (result == null)
             {
@@ -79,36 +76,4 @@ namespace ChatApiTest.account_center.paymentTest
 
     }
 
-    class RequestUtils
-    {
-        public static JObject HttpGetRequest(string url, JObject headParam, JObject param)
-        {
-            url += CommonUtils.GetQueryStringCipher(param);
-            HttpWebRequest request = (HttpWebRequest)WebRequest.Create(url);
-            request.Method = "GET";
-            if (headParam != null)
-            {
-                foreach (var item in headParam)
-                    request.Headers.Add(item.Key, item.Value.ToString());
-            }
-
-            HttpWebResponse response = (HttpWebResponse)request.GetResponse();
-            Stream repStream = response.GetResponseStream();
-            StreamReader myStreamReader = new StreamReader(repStream, Encoding.UTF8);
-            string retString = myStreamReader.ReadToEnd();
-            myStreamReader.Close();
-            repStream.Close();
-            return JObject.Parse(retString);
-        }
-    }
-
-    class Utils
-    {
-        public enum PaymentType
-        {
-            ALIPAY = 1,
-            WECHATPAY = 2,
-            WALLETPAY = 3
-        }
-    }
 }

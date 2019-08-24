@@ -8,35 +8,30 @@ namespace CShapeDemo.account_center.accountTest
 {
     class AccountTest
     {
-        public void main(string[] args)
+        private string apiToken;
+
+        public AccountTest(string apiToken)
         {
-            AccountTest test = new AccountTest();
-            Console.WriteLine(test.testCaptchaSms());
-            Console.WriteLine(test.testUserSignIn());
-            Console.WriteLine(test.testRefreshToken());
-            Console.WriteLine(test.testUserSignOut());
-            Console.WriteLine(test.testUserInfo());
-            Console.WriteLine(test.testAddSubAccount());
-            Console.ReadKey();
+            this.apiToken = apiToken;
         }
 
         /// <summary>
         /// 获取短信验证码
         /// </summary>
         /// <returns>返回的Json数据</returns>
-        public JObject testCaptchaSms()
+        public JObject testCaptchaSms(string phone)
         {
             JObject param = new JObject();
-            param.Add("Authorization", Utils.GetAuthString("15907558676:"));
+            param.Add("Authorization", Utils.GetAuthString(phone + ":"));
+            //param.Add("Authorization", Utils.GetAuthString("15907558676:"));
             param.Add("Timestamp", CommonUtils.GetTimestamp());
-            string token = CommonUtils.GetApiToken();
-            if (token != null) param.Add("Access-Token", token);
+            if (apiToken != null) param.Add("Access-Token", apiToken);
             else
             {
                 Console.WriteLine("商户token获取失败");
                 return null;
             }
-            string url = CommonUtils.GetFromConfig("account-host") + "/api/open/v1/captcha/sms";
+            string url = CommonUtils.GetAppConfig("account-host") + "/api/open/v1/captcha/sms";
             JObject result = RequestUtils.HttpGetRequest(url, param, null);
             if (result == null)
             {
@@ -44,25 +39,29 @@ namespace CShapeDemo.account_center.accountTest
                 return null;
             }
             if (result.Value<int>("retcode") == 0)
-                Console.WriteLine("请求成功！");
+                Console.WriteLine("短信验证码发送成功！");
             return result;
         }
 
         /* 用户登录 */
-        public JObject testUserSignIn()
+        /// <summary>
+        ///     商户下的用户登录
+        /// </summary>
+        /// <param name="apiToken"></param>
+        /// <param name="account">手机号:验证码</param>
+        /// <returns></returns>
+        public JObject testUserSignIn(string phone, string sms)
         {
             JObject param = new JObject();
-            string account = CommonUtils.GetFromConfig("defaultAccount");
-            param.Add("Authorization", Utils.GetAuthString(account));
+            param.Add("Authorization", Utils.GetAuthString(phone + ":" + sms));
             param.Add("Timestamp", CommonUtils.GetTimestamp());
-            string token = CommonUtils.GetApiToken();
-            if (token != null) param.Add("Access-Token", token);
+            if (apiToken != null) param.Add("Access-Token", apiToken);
             else
             {
                 Console.WriteLine("商户token获取失败");
                 return null;
             }
-            string url = CommonUtils.GetFromConfig("account-host") + "/api/open/v1/user/token";
+            string url = CommonUtils.GetAppConfig("account-host") + "/api/open/v1/user/token";
             JObject result = RequestUtils.HttpGetRequest(url, param, null);
             if (result == null)
             {
@@ -72,30 +71,33 @@ namespace CShapeDemo.account_center.accountTest
             if (result.Value<int>("retcode") == 0)
             {
                 string payload = CommonUtils.DecodeAES(result.Value<string>("payload"));
-                result["payload"] = JObject.Parse(payload);
+                JObject payloadJson = JObject.Parse(payload);
+                string accessToken = payloadJson.Value<string>("accessToken");
+                string refreshToken = payloadJson.Value<string>("refreshToken");
+                CommonUtils.WriteDataConfig("userToken", accessToken);
+                CommonUtils.WriteDataConfig("userRefreshToken", refreshToken);
+                result["payload"] = payloadJson;
             }
-            result.Add("token", token);
             return result;
         }
 
         /* 刷新用户Token */
-        public JObject testRefreshToken()
+        public JObject testRefreshToken(string refreshToken)
         {
-            string refreshToken = CommonUtils.GetUserRefreshToken();
+            //string refreshToken = CommonUtils.GetDataConfig("userRefreshToken");
             if (refreshToken == null)
                 return null;
             JObject param = new JObject();
             param.Add("Authorization", "Bearer " + refreshToken);
             param.Add("Timestamp", CommonUtils.GetTimestamp());
-            string token = CommonUtils.GetApiToken();
-            if (token != null) param.Add("Access-Token", token);
+            if (apiToken != null) param.Add("Access-Token", apiToken);
             else
             {
                 Console.WriteLine("商户token获取失败");
                 return null;
             }
-            string url = CommonUtils.GetFromConfig("account-host") + "/api/open/v1/user/token";
-            JObject result = RequestUtils.HttpPutRequest(url, param);
+            string url = CommonUtils.GetAppConfig("account-host") + "/api/open/v1/user/token";
+            JObject result = CurRequestUtils.HttpPutRequest(url, param);
             if (result == null)
             {
                 Console.WriteLine("请求失败");
@@ -104,18 +106,22 @@ namespace CShapeDemo.account_center.accountTest
             if (result.Value<int>("retcode") == 0)
             {
                 string payload = CommonUtils.DecodeAES(result.Value<string>("payload"));
-                result["payload"] = JObject.Parse(payload);
+                JObject payloadJson = JObject.Parse(payload);
+                string accessToken = payloadJson.Value<string>("accessToken");
+                refreshToken = payloadJson.Value<string>("refreshToken");
+                CommonUtils.WriteDataConfig("userToken", accessToken);
+                CommonUtils.WriteDataConfig("userRefreshToken", refreshToken);
+                result["payload"] = payloadJson;
             }
             return result;
         }
 
         /* 用户登出 */
-        public JObject testUserSignOut()
+        public JObject testUserSignOut(string userToken)
         {
-            JObject param = CommonUtils.GetCommonSystem();
-
-            string url = CommonUtils.GetFromConfig("account-host") + "/api/open/v1/user/token";
-            JObject result = RequestUtils.HttpDeleteRequest(url, param);
+            JObject param = CommonUtils.GetCommonSystem(apiToken, userToken);
+            string url = CommonUtils.GetAppConfig("account-host") + "/api/open/v1/user/token";
+            JObject result = RequestUtils.HttpDeleteRequest(url, param, null);
             if (result == null)
             {
                 Console.WriteLine("请求失败");
@@ -126,10 +132,10 @@ namespace CShapeDemo.account_center.accountTest
         }
 
         /* 获取账户用户信息 */
-        public JObject testUserInfo()
+        public JObject testUserInfo(string userToken)
         {
-            JObject headParam = CommonUtils.GetCommonSystem();
-            string url = CommonUtils.GetFromConfig("account-host") + "/api/open/v1/user";
+            JObject headParam = CommonUtils.GetCommonSystem(apiToken, userToken);
+            string url = CommonUtils.GetAppConfig("account-host") + "/api/open/v1/user";
             JObject result = RequestUtils.HttpGetRequest(url, headParam, null);
             if (result == null)
             {
@@ -145,11 +151,11 @@ namespace CShapeDemo.account_center.accountTest
         }
 
         /* 新增子账号 */
-        public JObject testAddSubAccount()
+        public JObject testAddSubAccount(string userToken,string businessId)
         {
-            JObject headParam = CommonUtils.GetCommonSystem();
-            headParam.Add("businessId", "testBusinessId");
-            string url = CommonUtils.GetFromConfig("account-host") + "/api/open/v1/user/sub";
+            JObject headParam = CommonUtils.GetCommonSystem(apiToken, userToken);
+            headParam.Add("businessId", businessId);
+            string url = CommonUtils.GetAppConfig("account-host") + "/api/open/v1/user/sub";
             JObject result = RequestUtils.HttpPostRequest(url, headParam, null);
             if (result == null)
             {
@@ -166,57 +172,8 @@ namespace CShapeDemo.account_center.accountTest
 
     }
 
-    class RequestUtils
+    class CurRequestUtils
     {
-        public static JObject HttpGetRequest(string url, JObject headParam, JObject param)
-        {
-            url += CommonUtils.GetQueryStringCipher(param);
-            HttpWebRequest request = (HttpWebRequest)WebRequest.Create(url);
-            request.Method = "GET";
-            if (headParam != null)
-            {
-                foreach (var item in headParam)
-                    request.Headers.Add(item.Key, item.Value.ToString());
-            }
-
-            HttpWebResponse response = (HttpWebResponse)request.GetResponse();
-            Stream repStream = response.GetResponseStream();
-            StreamReader myStreamReader = new StreamReader(repStream, Encoding.UTF8);
-            string retString = myStreamReader.ReadToEnd();
-            myStreamReader.Close();
-            repStream.Close();
-            return JObject.Parse(retString);
-        }
-
-        public static JObject HttpPostRequest(string url, JObject headParam, JObject param)
-        {
-            HttpWebRequest request = (HttpWebRequest)WebRequest.Create(url);
-            request.Method = "POST";
-            if (headParam != null)
-            {
-                foreach (var item in headParam)
-                    request.Headers.Add(item.Key, item.Value.ToString());
-            }
-            if (param != null)
-            {
-                request.ContentType = "text/plain";
-                string postStr = CommonUtils.GetBodyStringCipher(param);
-                byte[] postData = Encoding.UTF8.GetBytes(postStr);
-                request.ContentLength = postData.Length;
-                Stream reqStream = request.GetRequestStream();
-                reqStream.Write(postData, 0, postData.Length);
-                reqStream.Close();
-            }
-
-            HttpWebResponse response = (HttpWebResponse)request.GetResponse();
-            Stream repStream = response.GetResponseStream();
-            StreamReader myStreamReader = new StreamReader(repStream, Encoding.UTF8);
-            string retString = myStreamReader.ReadToEnd();
-            myStreamReader.Close();
-            repStream.Close();
-            return JObject.Parse(retString);
-        }
-
         public static JObject HttpPutRequest(string url, JObject headParam)
         {
             HttpWebRequest request = (HttpWebRequest)WebRequest.Create(url);
@@ -233,27 +190,10 @@ namespace CShapeDemo.account_center.accountTest
             return JObject.Parse(retString);
         }
 
-        public static JObject HttpDeleteRequest(string url, JObject headParam)
-        {
-            HttpWebRequest request = (HttpWebRequest)WebRequest.Create(url);
-            request.Method = "DELETE";
-            foreach (var item in headParam)
-                request.Headers.Add(item.Key, item.Value.ToString());
-
-            HttpWebResponse response = (HttpWebResponse)request.GetResponse();
-            Stream repStream = response.GetResponseStream();
-            StreamReader myStreamReader = new StreamReader(repStream, Encoding.UTF8);
-            string retString = myStreamReader.ReadToEnd();
-            myStreamReader.Close();
-            repStream.Close();
-            return JObject.Parse(retString);
-        }
-
     }
 
     class Utils
     {
-
         public static string GetAuthString(string msg)
         {
             byte[] bytes = Encoding.Default.GetBytes(msg);
