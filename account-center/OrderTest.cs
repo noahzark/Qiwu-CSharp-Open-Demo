@@ -8,22 +8,21 @@ namespace CShapeDemo.account_center.orderTest
 {
     class OrderTest
     {
+        private string apiToken;
+        private string userToken;
 
-        public void main(string[] args)
+        public OrderTest(string apiToken, string userToken)
         {
-            OrderTest test = new OrderTest();
-            Console.WriteLine(test.testGetOneOrder());
-            Console.WriteLine(test.testGetOrderList());
-            Console.WriteLine(test.testDeleteOneOrder());
-            Console.ReadKey();
+            this.apiToken = apiToken;
+            this.userToken = userToken;
         }
 
-        public JObject testGetOneOrder()
+        /* 获取订单信息 */
+        public JObject testGetOneOrder(string orderId)
         {
-            string oid = "f2019082214255679014155";
-            JObject headParam = CommonUtils.GetCommonSystem();
-            JObject param = new JObject { { "orderId", oid } };
-            string url = CommonUtils.GetFromConfig("account-host") + "/api/open/v1/order";
+            JObject headParam = CommonUtils.GetCommonSystem(apiToken, userToken);
+            JObject param = new JObject { { "orderId", orderId } };
+            string url = CommonUtils.GetAppConfig("account-host") + "/api/open/v1/order";
             JObject result = RequestUtils.HttpGetRequest(url, headParam, param);
             if (result == null)
             {
@@ -46,16 +45,17 @@ namespace CShapeDemo.account_center.orderTest
             return result;
         }
 
-        public JObject testGetOrderList()
+        /* 获取账号下订单 */
+        public JObject testGetOrderList(string state, string lastId, string pageSize, string orderType)
         {
-            string id = "5d5e3574805fdf0001b16e7c";
-            JObject headParam = CommonUtils.GetCommonSystem();
+            string id = CommonUtils.GetDataConfig("order_id");
+            JObject headParam = CommonUtils.GetCommonSystem(apiToken, userToken);
             JObject param = new JObject();
-            param.Add("state", (int)Utils.StateType.CHUPIAOZHONG);
-            param.Add("lastId", id);
-            param.Add("pageSize", 30);
-            param.Add("orderType", (int)Utils.OrderType.FLIGHT);
-            string url = CommonUtils.GetFromConfig("account-host") + "/api/open/v1/orders";
+            param.Add("state", state);
+            param.Add("lastId", lastId);
+            param.Add("pageSize", pageSize);
+            param.Add("orderType", orderType);
+            string url = CommonUtils.GetAppConfig("account-host") + "/api/open/v1/orders";
             JObject result = RequestUtils.HttpGetRequest(url, headParam, param);
             if (result == null)
             {
@@ -79,12 +79,12 @@ namespace CShapeDemo.account_center.orderTest
 
         }
 
-        public JObject testDeleteOneOrder()
+        /* 取消订单 */
+        public JObject testDeleteOneOrder(string orderId)
         {
-            string oid = "f2019073011383932530193";
-            JObject headParam = CommonUtils.GetCommonSystem();
-            JObject param = new JObject { { "orderId", oid } };
-            string url = CommonUtils.GetFromConfig("account-host") + "/api/open/v1/order";
+            JObject headParam = CommonUtils.GetCommonSystem(apiToken, userToken);
+            JObject param = new JObject { { "orderId", orderId } };
+            string url = CommonUtils.GetAppConfig("account-host") + "/api/open/v1/order";
             JObject result = RequestUtils.HttpDeleteRequest(url, headParam, param);
             if (result == null)
             {
@@ -109,87 +109,4 @@ namespace CShapeDemo.account_center.orderTest
 
     }
 
-    class RequestUtils
-    {
-        public static JObject HttpGetRequest(string url, JObject headParam, JObject param)
-        {
-            url += CommonUtils.GetQueryStringCipher(param);
-            HttpWebRequest request = (HttpWebRequest)WebRequest.Create(url);
-            request.Method = "GET";
-            if (headParam != null)
-            {
-                foreach (var item in headParam)
-                    request.Headers.Add(item.Key, item.Value.ToString());
-            }
-
-            HttpWebResponse response = (HttpWebResponse)request.GetResponse();
-            Stream repStream = response.GetResponseStream();
-            StreamReader myStreamReader = new StreamReader(repStream, Encoding.UTF8);
-            string retString = myStreamReader.ReadToEnd();
-            myStreamReader.Close();
-            repStream.Close();
-            return JObject.Parse(retString);
-        }
-
-        public static JObject HttpDeleteRequest(string url, JObject headParam, JObject param)
-        {
-            url += CommonUtils.GetQueryStringCipher(param);
-            HttpWebRequest request = (HttpWebRequest)WebRequest.Create(url);
-            request.Method = "DELETE";
-            if (headParam != null)
-            {
-                foreach (var item in headParam)
-                    request.Headers.Add(item.Key, item.Value.ToString());
-            }
-
-            HttpWebResponse response = (HttpWebResponse)request.GetResponse();
-            Stream repStream = response.GetResponseStream();
-            StreamReader myStreamReader = new StreamReader(repStream, Encoding.UTF8);
-            string retString = myStreamReader.ReadToEnd();
-            myStreamReader.Close();
-            repStream.Close();
-            return JObject.Parse(retString);
-        }
-
-    }
-
-    class Utils
-    {
-        public enum StateType
-        {
-            CHUPIAOZHONG = 1,//出票中
-            TUIKUANZHONG = 5,//退款中
-            DAIZHIFU = 0,//待支付
-            DAICHUXING = 2,//待出行
-            CHUPIAOSHIBAI = 4,//出票失败
-            YIQUXIAO = 7, //已取消
-            YITUIKUAN = 6, //已退款
-            YICHUXING = 3, //已出行
-            JIAOYIGUANBI = 8, //交易关闭
-            GAIQIANZHONG = 9, //改签中
-            ZHANZUOZHONG = 10, //占座中
-            QUXIAOZHONG = 11, //取消中
-            TUIPIAOZHONG = 12, //退票中
-            CHUPIAOSHIBAITUIKUANZHONG = 13, //出票失败退款中
-            TUIKUANSHIBAI = 14, //退款失败
-            SIJIDAODA = 15, //司机已到达
-            CHAOSHIQUXIAO = 16 //超时取消
-        }
-
-
-        public enum OrderType
-        {
-            FLIGHT=0,   //机票
-            FLIGHT_RETURN = 1,//机票返程
-            TRAIN = 2,  //火车
-            HOTEL =3,   //酒店
-            TAXI_ORDER = 4,
-            PHONE_CHARGE=5, //充话费
-            PAIR= 6 , //恋爱运势
-            FORTUN=7,   //月运势
-            EXPRESS= 8, //闪送
-            MOVIE=9   //电影
-        }
-
-    }
 }

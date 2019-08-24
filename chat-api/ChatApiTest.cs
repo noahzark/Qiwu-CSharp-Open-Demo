@@ -1,67 +1,65 @@
-﻿using Newtonsoft.Json.Linq;
+﻿using CShapeDemo.account_center;
+using Newtonsoft.Json.Linq;
 using System;
-using System.Configuration;
 using System.IO;
 using System.Management;
 using System.Net;
 using System.Security.Cryptography;
 using System.Text;
 
-namespace ChatApiTest
+namespace CShapeDemo.chatApiTest
 {
     class ChatApiTest
     {
-        public void main(string[] args)
+        public string appkey;
+        private string appsecret;
+        private string nickname;
+
+        public ChatApiTest(string appkey,string appsecret,string nickname)
         {
-            ChatApiTest test = new ChatApiTest();
-            test.testChatApiFrom("hello!!");
-            test.testChatApiJson("hello!!");
-            test.testApiChatGeoFrom("113.979399", "22.544891");
-            test.testApiChatGeoJson("113.979399", "22.544891");
-            test.testApiSpeechChatStream("../../chat-api/test.amr");
-            test.testApiSpeechChatData("../../chat-api/test.amr");
-            Console.ReadKey();
+            this.appkey = appkey;
+            this.appsecret = appsecret;
+            this.nickname = nickname;
         }
 
         /*  闲聊服务  */
         public void testChatApiFrom(string msg)
         {
-
-            JObject param = RequestUtils.GetSystemParmas();
+            JObject param = RequestUtils.GetSystemParmas(appkey, appsecret, nickname);
             param.Add("msg", msg);
 
-            string url = Utils.GetFromConfig("chat-host") + "/api/chat";
+            string url = CommonUtils.GetAppConfig("chat-host") + "/api/chat";
             Console.WriteLine(RequestUtils.HttpPostForm(url, param));
         }
 
         public void testChatApiJson(string msg)
         {
 
-            JObject param = RequestUtils.GetSystemParmas();
+            JObject param = RequestUtils.GetSystemParmas(appkey, appsecret, nickname);
             param.Add("msg", msg);
 
-            string url = Utils.GetFromConfig("chat-host") + "/api/chat";
+            string url = CommonUtils.GetAppConfig("chat-host") + "/api/chat";
             Console.WriteLine(RequestUtils.HttpPostJson(url, param));
         }
 
         /*  上报GPS  */
         public void testApiChatGeoFrom(string lng, string lat)
         {
-            JObject param = RequestUtils.GetSystemParmas();
+            JObject param = RequestUtils.GetSystemParmas(appkey, appsecret, nickname);
             param.Add("geo[lng]", lng);
             param.Add("geo[lat]", lat);
 
-            string url = Utils.GetFromConfig("chat-host") + "/api/chat/geo";
+            string url = CommonUtils.GetAppConfig("chat-host") + "/api/chat/geo";
             Console.WriteLine(RequestUtils.HttpPostForm(url, param));
         }
 
-        public void testApiChatGeoJson(string lng, string lat)
+        public void testApiChatGeoJson( string lng, string lat)
         {
-            JObject param = RequestUtils.GetSystemParmas();
+            JObject param = RequestUtils.GetSystemParmas(appkey, appsecret, nickname);
             param.Add("geo[lng]", lng);
             param.Add("geo[lat]", lat);
 
-            string url = Utils.GetFromConfig("chat-host") + "/api/chat/geo";
+            string url = CommonUtils.GetAppConfig("chat-host") + "/api/chat/geo";
             Console.WriteLine(RequestUtils.HttpPostJson(url, param));
         }
 
@@ -71,7 +69,7 @@ namespace ChatApiTest
             string fileExten = Path.GetExtension(file).Replace(".", "");
             if (fileExten != "amr" && fileExten != "wav" && fileExten != "pcm")
                 return;
-            JObject param = RequestUtils.GetSystemParmas();
+            JObject param = RequestUtils.GetSystemParmas(appkey, appsecret, nickname);
             param.Add("codec", fileExten);
             param.Add("rate", "8000");
             string postStr = "?";
@@ -81,7 +79,7 @@ namespace ChatApiTest
                     postStr += "&";
                 postStr += item.Key + "=" + item.Value;
             }
-            string url = Utils.GetFromConfig("chat-host") + "/api/speech/chat" + postStr;
+            string url = CommonUtils.GetAppConfig("chat-host") + "/api/speech/chat" + postStr;
             Console.WriteLine(RequestUtils.HttpPostStream(url, file));
         }
 
@@ -90,7 +88,7 @@ namespace ChatApiTest
             string fileExten = Path.GetExtension(file).Replace(".", "");
             if (fileExten != "amr" && fileExten != "wav" && fileExten != "pcm")
                 return;
-            JObject param = RequestUtils.GetSystemParmas();
+            JObject param = RequestUtils.GetSystemParmas(appkey, appsecret, nickname);
             param.Add("codec", fileExten);
             param.Add("rate", "8000");
             string postStr = "?";
@@ -100,7 +98,7 @@ namespace ChatApiTest
                     postStr += "&";
                 postStr += item.Key + "=" + item.Value;
             }
-            string url = Utils.GetFromConfig("chat-host") + "/api/speech/chat" + postStr;
+            string url = CommonUtils.GetAppConfig("chat-host") + "/api/speech/chat" + postStr;
             Console.WriteLine(RequestUtils.HttpPostFormData(url, file));
         }
 
@@ -108,11 +106,8 @@ namespace ChatApiTest
 
     class RequestUtils
     {
-        public static JObject GetSystemParmas()
+        public static JObject GetSystemParmas(string appkey, string appsecret, string nickname)
         {
-            string appkey = Utils.GetFromConfig("appkey");
-            string appsecret = Utils.GetFromConfig("appsecret");
-            string nickname = Utils.GetFromConfig("nickname");
             string uid = Utils.GetMacAddress();
             string timestamp = Utils.GetTimestamp(DateTime.UtcNow);
             JObject param = new JObject();
@@ -291,12 +286,6 @@ namespace ChatApiTest
                 ciphertext += s.ToString("x2");
             }
             return ciphertext;
-        }
-
-        public static string GetFromConfig(string key)
-        {
-            Configuration config = ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.None);
-            return config.AppSettings.Settings[key].Value;
         }
 
     }

@@ -1,8 +1,9 @@
 ﻿using CShapeDemo.account_center.accountTest;
-using CShapeDemo.account_center.tokenTest;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Configuration;
+using System.IO;
+using System.Net;
 using System.Security.Cryptography;
 using System.Text;
 using System.Web;
@@ -22,7 +23,7 @@ namespace CShapeDemo.account_center
                         stringBuilder.Append("&");
                     stringBuilder.Append(item.Key + "=" + item.Value);
                 }
-                string queryString = "?q=" + HttpUtility.UrlEncode(EncodeAES(stringBuilder.ToString()));    //get请求才需要encode
+                string queryString = "?q=" + HttpUtility.UrlEncode(EncodeAES(stringBuilder.ToString()));    //需要encode
                 return queryString;
             }
             return null;
@@ -38,67 +39,13 @@ namespace CShapeDemo.account_center
             return null;
         }
 
-        public static JObject GetCommonSystem()
+        public static JObject GetCommonSystem(string apiToken,string userToken)
         {
-            JObject allTokens = GetAllTokens();
-            if (allTokens == null)
-            {
-                Console.WriteLine("获取token失败！");
-                return null;
-            }
             JObject param = new JObject();
-            param.Add("Access-Token", allTokens.Value<string>("apiToken"));
-            param.Add("Authorization", "Bearer " + allTokens.Value<string>("userToken"));
+            param.Add("Access-Token", apiToken);
+            param.Add("Authorization", "Bearer " + userToken);
             param.Add("Timestamp", GetTimestamp());
             return param;
-        }
-
-
-        public static string GetApiToken()
-        {
-            TokenTest tokenTest = new TokenTest();
-            JObject tokens = tokenTest.testGetToken();
-            if (tokens == null) return null;
-            string apiToken = tokens.Value<string>("accessToken");
-            return apiToken;
-
-        }
-
-        public static JObject GetAllTokens()
-        {
-            AccountTest test = new AccountTest();
-            JObject result = test.testUserSignIn();
-            try
-            {
-                string userToken = result.Value<JObject>("payload").Value<string>("accessToken");
-                string apiToken = result.Value<string>("token");
-                JObject jObject = new JObject();
-                jObject.Add("apiToken", apiToken);
-                jObject.Add("userToken", userToken);
-                return jObject;
-            }
-            catch
-            {
-                Console.WriteLine("获取token失败");
-                return null;
-            }
-        }
-
-        public static string GetUserRefreshToken()
-        {
-            AccountTest test = new AccountTest();
-            JObject result = test.testUserSignIn();
-            try
-            {
-                JObject payload = result.Value<JObject>("payload");
-                string refreshToken = payload.Value<string>("refreshToken");
-                return refreshToken;
-            }
-            catch
-            {
-                Console.WriteLine("获取refreshToken失败");
-                return null;
-            }
         }
 
         /* AES加密 */
@@ -106,8 +53,8 @@ namespace CShapeDemo.account_center
         {
             if (text == null || text.Length == 0) return text;
 
-            string key = GetFromConfig("aesKey");
-            string iv = GetFromConfig("aesIv");
+            string key = GetDataConfig("aesKey");
+            string iv = GetDataConfig("aesIv");
             RijndaelManaged rijndaelCipher = new RijndaelManaged();
             rijndaelCipher.Mode = CipherMode.CBC;
             rijndaelCipher.Padding = PaddingMode.PKCS7;
@@ -133,8 +80,8 @@ namespace CShapeDemo.account_center
         {
             if (text == null || text.Length == 0) return text;
 
-            string key = GetFromConfig("aesKey");
-            string iv = GetFromConfig("aesIv");
+            string key = GetDataConfig("aesKey");
+            string iv = GetDataConfig("aesIv");
             RijndaelManaged rijndaelCipher = new RijndaelManaged();
             rijndaelCipher.Mode = CipherMode.CBC;
             rijndaelCipher.Padding = PaddingMode.PKCS7;
@@ -154,16 +101,127 @@ namespace CShapeDemo.account_center
             return Encoding.UTF8.GetString(plainText);
         }
 
-        public static string GetFromConfig(string key)
+        public static string GetAppConfig(string key)
         {
             Configuration config = ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.None);
             return config.AppSettings.Settings[key].Value;
+        }
+
+        public static void WriteDataConfig(string key, string value)
+        {
+            ExeConfigurationFileMap configFileMap = new ExeConfigurationFileMap() { ExeConfigFilename = "../../TestData.Config" };
+            Configuration config = ConfigurationManager.OpenMappedExeConfiguration(configFileMap, ConfigurationUserLevel.None);
+            if (config.AppSettings.Settings[key] == null)
+            {
+                config.AppSettings.Settings.Add(key, value);
+            }
+            else
+            {
+                config.AppSettings.Settings[key].Value = value;
+            }
+            config.Save();
+        }
+
+        public static void DeleteDataConfig(string key)
+        {
+            ExeConfigurationFileMap configFileMap = new ExeConfigurationFileMap() { ExeConfigFilename = "../../TestData.Config" };
+            Configuration config = ConfigurationManager.OpenMappedExeConfiguration(configFileMap, ConfigurationUserLevel.None);
+            config.AppSettings.Settings.Remove(key);
+            config.Save();
+        }
+
+        public static string GetDataConfig(string key)
+        {
+            ExeConfigurationFileMap configFileMap = new ExeConfigurationFileMap() { ExeConfigFilename = "../../TestData.Config" };
+            Configuration config = ConfigurationManager.OpenMappedExeConfiguration(configFileMap, ConfigurationUserLevel.None);
+            try
+            {
+                return config.AppSettings.Settings[key].Value;
+            }
+            catch
+            {
+                Console.WriteLine("Data中" + key + "不存在");
+                return null;
+            }
         }
 
         public static string GetTimestamp()
         {
             TimeSpan time = DateTime.UtcNow - new DateTime(1970, 1, 1, 0, 0, 0, 0);
             return Convert.ToInt64(time.TotalMilliseconds).ToString();
+        }
+    }
+
+    class RequestUtils
+    {
+        public static JObject HttpGetRequest(string url, JObject headParam, JObject param)
+        {
+            url += CommonUtils.GetQueryStringCipher(param);
+            HttpWebRequest request = (HttpWebRequest)WebRequest.Create(url);
+            request.Method = "GET";
+            if (headParam != null)
+            {
+                foreach (var item in headParam)
+                    request.Headers.Add(item.Key, item.Value.ToString());
+            }
+
+            HttpWebResponse response = (HttpWebResponse)request.GetResponse();
+            Stream repStream = response.GetResponseStream();
+            StreamReader myStreamReader = new StreamReader(repStream, Encoding.UTF8);
+            string retString = myStreamReader.ReadToEnd();
+            myStreamReader.Close();
+            repStream.Close();
+            return JObject.Parse(retString);
+        }
+
+        public static JObject HttpPostRequest(string url, JObject headParam, JObject param)
+        {
+            HttpWebRequest request = (HttpWebRequest)WebRequest.Create(url);
+            request.Method = "POST";
+            if (headParam != null)
+            {
+                foreach (var item in headParam)
+                    request.Headers.Add(item.Key, item.Value.ToString());
+            }
+            if (param != null)
+            {
+                request.ContentType = "application/json";
+                //request.ContentType = "text/plain";
+                string postStr = CommonUtils.GetBodyStringCipher(param);
+                byte[] postData = Encoding.UTF8.GetBytes(postStr);
+                request.ContentLength = postData.Length;
+                Stream reqStream = request.GetRequestStream();
+                reqStream.Write(postData, 0, postData.Length);
+                reqStream.Close();
+            }
+
+            HttpWebResponse response = (HttpWebResponse)request.GetResponse();
+            Stream repStream = response.GetResponseStream();
+            StreamReader myStreamReader = new StreamReader(repStream, Encoding.UTF8);
+            string retString = myStreamReader.ReadToEnd();
+            myStreamReader.Close();
+            repStream.Close();
+            return JObject.Parse(retString);
+        }
+
+        public static JObject HttpDeleteRequest(string url, JObject headParam, JObject param)
+        {
+            url += CommonUtils.GetQueryStringCipher(param);
+            HttpWebRequest request = (HttpWebRequest)WebRequest.Create(url);
+            request.Method = "DELETE";
+            if (headParam != null)
+            {
+                foreach (var item in headParam)
+                    request.Headers.Add(item.Key, item.Value.ToString());
+            }
+
+            HttpWebResponse response = (HttpWebResponse)request.GetResponse();
+            Stream repStream = response.GetResponseStream();
+            StreamReader myStreamReader = new StreamReader(repStream, Encoding.UTF8);
+            string retString = myStreamReader.ReadToEnd();
+            myStreamReader.Close();
+            repStream.Close();
+            return JObject.Parse(retString);
         }
     }
 }
